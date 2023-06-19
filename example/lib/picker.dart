@@ -15,13 +15,11 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       theme: new ThemeData(
           primarySwatch: Colors.blue,
-          backgroundColor: Color(0xff3c3f41),
-          accentColor:  Color(0xff0d293e),
           iconTheme: IconThemeData(
             color: Color(0xffbbbbbb),
           ),
           textTheme: TextTheme(
-            body1: TextStyle(color: Color(0xffbbbbbb)),
+            bodyLarge: TextStyle(color: Color(0xffbbbbbb)),
           )
       ),
       home: new MyHomePage(),
@@ -30,7 +28,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key}) : super(key: key);
+  MyHomePage({Key? key}) : super(key: key);
 
   @override
   _MyHomePageState createState() => new _MyHomePageState();
@@ -38,7 +36,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
 
-  String path;
+  String path = "";
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +47,7 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             Text(path?? "-"),
-            RaisedButton(
+            ElevatedButton(
               onPressed: () async {
                 path = await showPicker(context, topInfo: Text("Choose a file to show"),
                   searchFor: FlutterFileType.Folder
@@ -65,5 +63,3 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
-
-

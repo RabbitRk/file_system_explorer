@@ -3,25 +3,25 @@ import 'package:flutter/material.dart';
 import 'package:file_system_explorer/src/file_system_explorer_new.dart';
 import 'package:provider/provider.dart';
 
-Future<String> showPicker(BuildContext context, {Widget topInfo, FlutterFileType searchFor}) {
-  return showDialog(context: context, builder: (context) {
-    return Dialog(
-      child: FilePickerDialog(
-        searchFor: searchFor,
-        topInfo: topInfo,
-      )
-    );
+Future<String> showPicker(BuildContext context,
+    {required Widget topInfo, required FlutterFileType searchFor}) {
+  return showDialog(
+      context: context,
+      builder: (context) => Dialog(
+              child: FilePickerDialog(
+            searchFor: searchFor,
+            topInfo: topInfo,
+          ))).then((value) {
+    return value;
   });
 }
 
-
-
 class FilePickerDialog extends StatelessWidget {
-
   final Widget topInfo;
   final FlutterFileType searchFor;
 
-  const FilePickerDialog({Key key, this.topInfo, this.searchFor}) : super(key: key);
+  const FilePickerDialog({Key? key, required this.topInfo, required this.searchFor})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -30,12 +30,12 @@ class FilePickerDialog extends StatelessWidget {
       width: 500,
       child: Column(
         children: <Widget>[
-          topInfo?? SizedBox(),
+          topInfo,
           Expanded(
             child: FilePicker(
               searchFor: searchFor,
               onPathSelected: (path) {
-                if(path != null) {
+                if (path != null) {
                   Navigator.pop(context, path);
                 } else {
                   Navigator.pop(context);
@@ -49,34 +49,35 @@ class FilePickerDialog extends StatelessWidget {
   }
 }
 
+class _CurrentFileSystemEntity with ChangeNotifier {
+  late FlutterFileType searchFor = FlutterFileType.Folder;
 
-class _CurrentFileSystemEntitiy with ChangeNotifier{
+  late final FileSystemEntity _fileSystemEntity;
 
-  final FlutterFileType searchFor;
-
-  FileSystemEntity _fileSystemEntity;
-
-  _CurrentFileSystemEntitiy(this.searchFor);
+  _CurrentFileSystemEntity(this.searchFor);
 
   FileSystemEntity get path => _fileSystemEntity;
+
   set fileSystemEntity(entity) {
     _fileSystemEntity = entity;
-    if(entity is File) {
+    if (entity is File) {
       isFile = true;
       notifyListeners();
-    } else if(entity is Directory) {
+    } else if (entity is Directory) {
       isFile = false;
       notifyListeners();
     }
   }
 
-  bool isFile;
+  bool isFile = false;
 
-  bool get isSearchedFor => searchFor == null? true: searchFor == FlutterFileType.File? isFile?? false: !(isFile?? false);
-
-
-
+  bool get isSearchedFor => searchFor == null
+      ? true
+      : searchFor == FlutterFileType.File
+          ? isFile
+          : !(isFile);
 }
+
 /// TODO this is the base implementation, this is going to need a few Desktop
 /// specific features in the future.
 ///
@@ -90,55 +91,47 @@ class _CurrentFileSystemEntitiy with ChangeNotifier{
 /// there isn't a need for active data transfer so having a separate isolate would work too
 /// (which makes things significantly easier)
 class FilePicker extends StatelessWidget {
-
-
-  FilePicker({Key key, this.onPathSelected, this.searchFor}) :
-        __currentFileSystemEntitiy = _CurrentFileSystemEntitiy(searchFor), super(key: key);
+  FilePicker({Key? key, required this.onPathSelected, required this.searchFor})
+      : __currentFileSystemEntitiy = _CurrentFileSystemEntity(searchFor),
+        super(key: key);
 
   final TextEditingController textEditingController = TextEditingController();
 
   final ValueChanged<String> onPathSelected;
   final FlutterFileType searchFor;
-  final _CurrentFileSystemEntitiy __currentFileSystemEntitiy;
+  final _CurrentFileSystemEntity __currentFileSystemEntitiy;
 
   @override
   Widget build(BuildContext context) {
     ThemeData theme = Theme.of(context);
-    return ChangeNotifierProvider<_CurrentFileSystemEntitiy>(
-      builder: (context) => __currentFileSystemEntitiy,
-      child: Container(
-        color: theme.backgroundColor,
+    return ChangeNotifierProvider<_CurrentFileSystemEntity>(
+      builder: (context, widget) => Container(
+        color: theme.colorScheme.background,
         padding: EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 16,
         ),
         child: Material(
-          color: theme.backgroundColor,
+          color: theme.colorScheme.background,
           child: Column(
             children: <Widget>[
               TextField(
-                style: theme.textTheme.body1,
+                style: theme.textTheme.bodyLarge,
                 controller: textEditingController,
                 decoration: InputDecoration(
                   contentPadding: EdgeInsets.all(12),
                   enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(
-                      color: Color(0xff323232),
-                      width: 2
-                    ),
+                    borderSide: BorderSide(color: Color(0xff323232), width: 2),
                   ),
-
                 ),
-
               ),
-              SizedBox(height: 4,),
+              SizedBox(
+                height: 4,
+              ),
               Expanded(
                 child: Container(
                   decoration: BoxDecoration(
-                    border: Border.all(
-                      color: Color(0xff323232)
-                    )
-                  ),
+                      border: Border.all(color: Color(0xff323232))),
                   child: FileSystemExplorer(
                     searchFor: searchFor,
                     onPathChanged: (entity) {
@@ -151,30 +144,44 @@ class FilePicker extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(height: 8,),
+              SizedBox(
+                height: 8,
+              ),
               Row(
                 children: <Widget>[
                   Spacer(),
-                  Consumer<_CurrentFileSystemEntitiy>(
+                  Consumer<_CurrentFileSystemEntity>(
                     builder: (context, current, child) {
                       return MaterialButton(
                         color: Color(0xff365880),
                         elevation: 2,
                         child: child,
-                        onPressed: current.isSearchedFor? (){
+                        onPressed: current.isSearchedFor
+                            ? () {
                           onPathSelected(textEditingController.text);
-                        }: null,
+                        }
+                            : null,
                       );
                     },
-                    child: Text("Ok", style: TextStyle(color: theme.textTheme.body1.color, fontWeight: FontWeight.w600),),
+                    child: Text(
+                      "Ok",
+                      style: TextStyle(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w600),
+                    ),
                   ),
-                  SizedBox(width: 16,),
+                  SizedBox(
+                    width: 16,
+                  ),
                   MaterialButton(
                     elevation: 2,
                     color: Color(0xff4c5052),
-                    child: Text("Cancle", style: theme.textTheme.body1,),
-                    onPressed: (){
-                      onPathSelected(null);
+                    child: Text(
+                      "Cancel",
+                      style: theme.textTheme.bodyLarge,
+                    ),
+                    onPressed: () {
+                      onPathSelected("");
                     },
                   ),
                 ],
@@ -183,8 +190,7 @@ class FilePicker extends StatelessWidget {
           ),
         ),
       ),
+      create: (context) => __currentFileSystemEntitiy,
     );
   }
 }
-
-
